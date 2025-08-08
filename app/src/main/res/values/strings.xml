@@ -1,0 +1,10 @@
+<resources>
+    <string name="app_name">BTC Price Widget</string>
+    <string name="label_btc">BTC</string>
+    <string name="btn_save">Guardar</string>
+    <string name="title_config">Configuración del widget</string>
+    <string name="hint_interval">Intervalo de actualización</string>
+    <string name="hint_color">Color del texto</string>
+    <string name="mode_high_freq">Usar modo 10 min (exact alarm)</string>
+    <string name="note_high_freq">Puede requerir permiso especial y más batería.</string>
+</resources>
