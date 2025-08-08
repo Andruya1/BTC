@@ -19,10 +19,18 @@ jobs:
           distribution: temurin
           java-version: '17'
 
-      - name: Set up Android SDK
+      - name: Set up Android SDK (cmdline tools)
         uses: android-actions/setup-android@v3
 
-      # Si no existe el wrapper, lo generamos (Gradle 8.7) y lo dejamos ejecutable
+      # Instala explícitamente las plataformas y build-tools requeridas
+      - name: Install required SDK packages
+        shell: bash
+        run: |
+          sdkmanager --version
+          yes | sdkmanager --licenses || true
+          yes | sdkmanager "platform-tools" "platforms;android-35" "build-tools;35.0.0"
+
+      # Crea el Gradle Wrapper si no existe y déjalo ejecutable
       - name: Ensure Gradle Wrapper
         shell: bash
         run: |
@@ -30,19 +38,22 @@ jobs:
             curl -s "https://get.sdkman.io" | bash
             source "$HOME/.sdkman/bin/sdkman-init.sh"
             sdk install gradle 8.7
-            gradle --version
             gradle wrapper --gradle-version 8.7
           fi
           chmod +x gradlew
+          ./gradlew --version
 
-      # (Opcional) Aceptar licencias si hiciera falta
-      - name: Accept licenses
+      # (Opcional) crea un gradle.properties básico para evitar problemas de memoria
+      - name: Ensure gradle.properties
         shell: bash
-        run: yes | sdkmanager --licenses || true
+        run: |
+          mkdir -p ~/.gradle
+          echo "org.gradle.jvmargs=-Xmx2g -Dfile.encoding=UTF-8" >> ~/.gradle/gradle.properties
 
-      - name: Build Debug APK
+      - name: Build Debug APK (verbose)
         shell: bash
-        run: ./gradlew :app:assembleDebug
+        run: |
+          ./gradlew :app:assembleDebug --stacktrace --info --no-daemon --warning-mode all
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
