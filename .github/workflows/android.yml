@@ -19,20 +19,19 @@ jobs:
           distribution: temurin
           java-version: '17'
 
-      - name: Set up Android SDK (cmdline tools)
+      - name: Set up Android SDK
         uses: android-actions/setup-android@v3
 
-      # Instala explícitamente las plataformas y build-tools requeridas
-      - name: Install required SDK packages
-        shell: bash
+      - name: Accept Android SDK licenses
         run: |
-          sdkmanager --version
-          yes | sdkmanager --licenses || true
-          yes | sdkmanager "platform-tools" "platforms;android-35" "build-tools;35.0.0"
+          yes | sdkmanager --licenses > /dev/null || true
 
-      # Crea el Gradle Wrapper si no existe y déjalo ejecutable
+      - name: Install required SDK packages
+        run: |
+          sdkmanager --install "platform-tools" "platforms;android-35" "build-tools;35.0.0" --no_https
+          sdkmanager --list
+
       - name: Ensure Gradle Wrapper
-        shell: bash
         run: |
           if [ ! -f gradlew ]; then
             curl -s "https://get.sdkman.io" | bash
@@ -43,20 +42,12 @@ jobs:
           chmod +x gradlew
           ./gradlew --version
 
-      # (Opcional) crea un gradle.properties básico para evitar problemas de memoria
-      - name: Ensure gradle.properties
-        shell: bash
-        run: |
-          mkdir -p ~/.gradle
-          echo "org.gradle.jvmargs=-Xmx2g -Dfile.encoding=UTF-8" >> ~/.gradle/gradle.properties
-
-      - name: Build Debug APK (verbose)
-        shell: bash
-        run: |
-          ./gradlew :app:assembleDebug --stacktrace --info --no-daemon --warning-mode all
+      - name: Build Debug APK
+        run: ./gradlew :app:assembleDebug --stacktrace --no-daemon
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
           name: BTCPriceWidget-debug
           path: app/build/outputs/apk/debug/*.apk
+
